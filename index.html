@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数字孪生机房 · Digital Twin Data Center</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+  <div id="labels"></div>
+
+  <header id="topbar">
+    <div class="brand">
+      <span class="logo">◈</span>
+      <div>
+        <div class="title">数字孪生机房</div>
+        <div class="sub">Digital Twin · 2 排 × 6 机柜 · 冷通道封闭 · N+1 空调 · 2N 供电</div>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span class="k">IT 负载</span><span class="v" id="kpi-it">--</span><span class="u">kW</span></div>
+      <div class="kpi"><span class="k">总功耗</span><span class="v" id="kpi-total">--</span><span class="u">kW</span></div>
+      <div class="kpi"><span class="k">PUE</span><span class="v" id="kpi-pue">--</span></div>
+      <div class="kpi"><span class="k">平均温度</span><span class="v" id="kpi-avg">--</span><span class="u">℃</span></div>
+      <div class="kpi"><span class="k">最高温度</span><span class="v" id="kpi-max">--</span><span class="u">℃</span></div>
+      <div class="kpi alarm"><span class="k">告警</span><span class="v" id="kpi-alarm">0</span></div>
+      <div class="kpi"><span class="k">时钟</span><span class="v" id="kpi-clock">--:--:--</span></div>
+    </div>
+  </header>
+
+  <aside id="left">
+    <section>
+      <h3>图层</h3>
+      <label><input type="checkbox" id="ly-net" checked> <i class="dot net"></i>网络链路与报文</label>
+      <label><input type="checkbox" id="ly-pow" checked> <i class="dot pow"></i>供电链路与电流</label>
+      <label><input type="checkbox" id="ly-air" checked> <i class="dot air"></i>冷/热气流</label>
+      <label><input type="checkbox" id="ly-heat"> <i class="dot heat"></i>温度热力图</label>
+      <label><input type="checkbox" id="ly-labels" checked> <i class="dot lbl"></i>设备/区域标签</label>
+      <label><input type="checkbox" id="ly-cont" checked> <i class="dot cont"></i>冷通道封闭</label>
+    </section>
+    <section>
+      <h3>视角</h3>
+      <div class="btns">
+        <button data-view="overview">全景</button>
+        <button data-view="top">俯视</button>
+        <button data-view="cold">冷通道</button>
+        <button data-view="hot">热通道</button>
+        <button data-view="core">核心网络</button>
+        <button data-view="power">供配电</button>
+        <button data-view="crac">精密空调</button>
+      </div>
+    </section>
+    <section>
+      <h3>运行过程演示</h3>
+      <select id="scenario">
+        <option value="request">① 一次请求的完整旅程</option>
+        <option value="power">② 供电链路：市电→UPS→服务器</option>
+        <option value="cooling">③ 冷却循环：空调→冷通道→热通道</option>
+        <option value="failover">④ 故障告警与冗余切换</option>
+      </select>
+      <div class="btns">
+        <button id="p-start" class="primary">开始</button>
+        <button id="p-next" disabled>下一步 ▸</button>
+        <button id="p-auto" disabled>自动播放</button>
+        <button id="p-stop" disabled>停止</button>
+      </div>
+    </section>
+    <section>
+      <h3>故障注入</h3>
+      <div class="btns">
+        <button id="f-server">随机服务器过热</button>
+        <button id="f-mains">市电中断</button>
+        <button id="f-crac">CRAC-1 停机</button>
+        <button id="f-repair" class="ok">全部修复</button>
+      </div>
+    </section>
+    <section>
+      <h3>操作</h3>
+      <div class="btns">
+        <button id="a-pushall">推回全部服务器</button>
+        <button id="a-traffic">流量 ×1</button>
+      </div>
+      <p class="hint">左键拖动旋转 · 右键平移 · 滚轮缩放<br>点击设备查看详情，点击服务器可抽出并拆解</p>
+    </section>
+  </aside>
+
+  <aside id="right">
+    <div id="detail"></div>
+  </aside>
+
+  <footer id="bottom">
+    <div id="narration" class="hidden">
+      <div class="step-head"><span id="n-step"></span><span id="n-title"></span></div>
+      <div id="n-text"></div>
+    </div>
+    <div id="log"></div>
+  </footer>
+
+  <div id="legend">
+    <span><i class="dot net"></i>请求</span>
+    <span><i class="dot resp"></i>响应</span>
+    <span><i class="dot pow"></i>电流</span>
+    <span><i class="dot air"></i>冷风</span>
+    <span><i class="dot hot"></i>热风</span>
+    <span><i class="dot ok"></i>正常</span>
+    <span><i class="dot warn"></i>预警</span>
+    <span><i class="dot err"></i>故障</span>
+  </div>
+
+  <div id="tooltip" class="hidden"></div>
+  <div id="loading"><div class="spinner"></div><div>正在构建数字孪生机房…</div></div>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
